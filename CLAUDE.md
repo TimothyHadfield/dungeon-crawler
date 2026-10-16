@@ -34,4 +34,4 @@ No test suite and no build step (don't add a framework). Verify with phone-view:
 - `body` is `100vh` with `overflow: hidden`; the canvas is sized from its container in `resizeCanvas()`.
 - `addMessage` keeps only the last 6 lines in `#message-log`; `initGame` clears it so a new run doesn't show the old run's lines.
 - `recalcStats()` must run after enemy turns, or the Warrior's Berserker bonus lags a turn behind HP.
-- The title screen's particle animation never idles, so Lighthouse can hang waiting for the page to settle.
+- The title screen's particle animation never idles, so a Lighthouse run takes 5+ minutes; run it in the background. Live scores 2026-10-16 (mobile): performance 76, accessibility 85, best practices 96. The perf cost is the title animation (Tim's visuals, left alone); the a11y hit is `user-scalable=no` in the viewport meta (left for Tim).

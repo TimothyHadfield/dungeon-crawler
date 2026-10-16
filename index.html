@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Abyssal Depths — Roguelike Dungeon Crawler</title>
+    <meta name="description" content="A turn-based roguelike dungeon crawler: pick a class, fight your way down ten randomly generated floors, and slay the Abyssal Dragon at the bottom.">
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -41,6 +43,7 @@
             background-clip: text;
             margin-bottom: 0.5rem;
             letter-spacing: 3px;
+            text-align: center; /* when it wraps on phones, keep it centred and off the left edge */
             animation: titlePulse 3s ease-in-out infinite;
         }
         @keyframes titlePulse {
@@ -563,6 +566,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            justify-content: safe center; /* tall content scrolls instead of being cut off on phones */
+            overflow-y: auto;
             z-index: 105;
         }
         #class-picker.active { display: flex; }
@@ -619,7 +624,7 @@
 <!-- TITLE SCREEN -->
 <div id="title-screen">
     <canvas id="title-bg"></canvas>
-    <button id="volume-toggle" onclick="toggleSound()">🔊</button>
+    <button id="volume-toggle" onclick="toggleSound()" aria-label="Toggle sound">🔊</button>
     <div class="title-text">ABYSSAL DEPTHS</div>
     <div class="subtitle">A Roguelike Dungeon Crawler</div>
     <button class="menu-btn" onclick="startGame()">Descend</button>
@@ -756,14 +761,14 @@
     <div id="mobile-controls">
         <div class="dpad" id="dpad-grid">
             <div class="dpad-btn empty"></div>
-            <div class="dpad-btn" data-dx="0" data-dy="-1">▲</div>
+            <div class="dpad-btn" data-dx="0" data-dy="-1" role="button" aria-label="Move up">▲</div>
             <div class="dpad-btn empty"></div>
-            <div class="dpad-btn" data-dx="-1" data-dy="0">◄</div>
-            <div class="dpad-btn action-btn" data-action="wait">WAIT</div>
-            <div class="dpad-btn" data-dx="1" data-dy="0">►</div>
+            <div class="dpad-btn" data-dx="-1" data-dy="0" role="button" aria-label="Move left">◄</div>
+            <div class="dpad-btn action-btn" data-action="wait" role="button" aria-label="Wait one turn">WAIT</div>
+            <div class="dpad-btn" data-dx="1" data-dy="0" role="button" aria-label="Move right">►</div>
             <div class="dpad-btn empty"></div>
-            <div class="dpad-btn" data-dx="0" data-dy="1">▼</div>
-            <div class="dpad-btn action-btn" data-action="stairs">STRS</div>
+            <div class="dpad-btn" data-dx="0" data-dy="1" role="button" aria-label="Move down">▼</div>
+            <div class="dpad-btn action-btn" data-action="stairs" role="button" aria-label="Use stairs">STRS</div>
         </div>
     </div>
 
@@ -1401,9 +1406,9 @@ function spawnEnemies(map, floor, occupied) {
     return enemies;
 }
 
-function spawnItems(map, floor, occupied, rooms) {
+function spawnItems(map, floor, occupied, rooms, passive) {
     const items = [];
-    const rangerBonus = (game && game.player && game.player.passive === 'pathfinder') ? 1 : 0;
+    const rangerBonus = passive === 'pathfinder' ? 1 : 0;
     const count = randInt(3, 5 + Math.floor(floor / 2)) + rangerBonus;
 
     function rollItem() {
@@ -1477,11 +1482,11 @@ function initGame() {
     map[endRoom.cy][endRoom.cx] = TILE.STAIRS;
     occupied.add(`${endRoom.cx},${endRoom.cy}`);
 
-    const enemies = spawnEnemies(map, 1, occupied);
-    const items = spawnItems(map, 1, occupied, rooms);
-
     // Apply class stats
     const cls = CLASSES[selectedClass] || CLASSES.warrior;
+
+    const enemies = spawnEnemies(map, 1, occupied);
+    const items = spawnItems(map, 1, occupied, rooms, cls.passiveKey);
 
     game = {
         map, rooms, revealed, visible,
@@ -1515,6 +1520,7 @@ function initGame() {
     ambientParticles = [];
     particles = [];
     floatingTexts = [];
+    document.getElementById('message-log').innerHTML = '';
     cameraX = px * TILE_SIZE;
     cameraY = py * TILE_SIZE;
 
@@ -1560,7 +1566,7 @@ function descendFloor() {
     occupied.add(`${endRoom.cx},${endRoom.cy}`);
 
     game.enemies = spawnEnemies(map, game.floor, occupied);
-    game.items = spawnItems(map, game.floor, occupied, rooms);
+    game.items = spawnItems(map, game.floor, occupied, rooms, p.passive);
     ambientParticles = [];
 
     computeFOV(map, p.x, p.y, getPlayerFOV(), revealed, visible);
@@ -2118,6 +2124,7 @@ function endTurn() {
     recalcStats();
 
     if (!game.gameOver) processEnemyTurns();
+    recalcStats(); // HP may have changed during enemy turns (Berserker)
 
     // Spawn ambient dust
     if (Math.random() < 0.3 && ambientParticles.length < 30) {

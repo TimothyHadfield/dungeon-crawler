@@ -13,6 +13,7 @@ None set. The game is finished and published; work is upkeep only.
 | Phone play (d-pad) | Works; inventory/potions not reachable on phone (see Traps) |
 | README showcase + screenshots | Done (2026-09-27) |
 | Bug sweep | 2026-10-16: 5 fixes (below), pushed to main |
+| Site icon | 2026-10-17: `icon.svg` (diagonal sword, purple hilt, on dark navy) tab favicon + `apple-touch-icon.png` for iPhone |
 
 ## Authorized next steps
 None.
